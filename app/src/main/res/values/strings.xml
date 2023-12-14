@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">AttendanceManagementApp</string>
+    <string name="course">Course</string>
+    <string name="course_name">course name</string>
+    <string name="time">Time</string>
+    <string name="date">Date</string>
+    <string name="stat">Stat</string>
+    <string name="search">Search</string>
+    <string name="degree_name">degree name</string>
+    <string name="degree">Degree</string>
+    <string name="department_name">department name</string>
+    <string name="department">Department</string>
+    <string name="faculty">Faculty</string>
+    <string name="faculty_name">faculty name</string>
+    <string name="group">group</string>
+    <string name="attendance_tracker">Attendance Tracker</string>
+    <string name="launch_msg">Effortlessly track student presence and attendance</string>
+    <string name="get_started">Get started</string>
+    <string name="log_in">Log In</string>
+    <string name="sign_in_msg">Sign in to track student attendance</string>
+    <string name="enter_your_e_mail_address">Enter your e-mail address</string>
+    <string name="example_email_com">example@email.com</string>
+    <string name="enter_your_password">Enter your password</string>
+    <string name="password_hint">**************</string>
+    <string name="remember_me">Remember me</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="major_name">major name</string>
+    <string name="major">Major</string>
+    <string name="subject">Subject</string>
+    <string name="notification">Notification</string>
+    <string name="profile">Profile</string>
+    <string name="name">name</string>
+    <string name="speciality">Speciality</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+</resources>
