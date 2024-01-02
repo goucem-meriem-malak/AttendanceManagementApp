@@ -1,70 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
-
-    <TextView
-        android:id="@+id/nameGroup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerInParent="true"
-        android:text="@string/course"
-        android:textSize="30sp"
-        android:textStyle="bold" />
-    <EditText
-        android:id="@+id/search"
+    android:id="@+id/refresh">
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/nameGroup"
-        android:layout_marginVertical="20dp"
-        android:inputType="text"
-        android:hint="@string/search"
-        android:drawableEnd="@drawable/search"
-        android:background="@drawable/style_constraint"
-        android:translationZ="2dp"
-        android:padding="16dp"
-        android:importantForAutofill="no" />
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/search"
+        android:layout_height="match_parent">
+    <RelativeLayout
+        style="@style/header"
+        android:id="@+id/header">
+        <TextView
+            style="@style/text_title"
+            android:id="@+id/nameSpeciality"
+            android:text="@string/course"/>
+    </RelativeLayout>
+    <androidx.core.widget.NestedScrollView
+        style="@style/body"
+        android:id="@+id/body"
+        android:layout_below="@id/header"
         android:layout_above="@id/footer">
         <LinearLayout
-            android:id="@+id/list_courses"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            style="@style/Layout_list"
+            android:id="@+id/list_courses">
         </LinearLayout>
-    </ScrollView>
-    <RelativeLayout
-        android:id="@+id/footer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
-
-        <Button
-            android:id="@+id/menu"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerInParent="true"
-            android:layout_marginStart="80dp"
-            android:background="@drawable/menu" />
-        <Button
-            android:id="@+id/notification"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/notification"
-            android:layout_marginEnd="100dp"/>
-        <Button
-            android:id="@+id/profile"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:background="@drawable/user"
-            android:layout_marginEnd="80dp"/>
+    </androidx.core.widget.NestedScrollView>
+    <include layout="@layout/footer"/>
     </RelativeLayout>
-</RelativeLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

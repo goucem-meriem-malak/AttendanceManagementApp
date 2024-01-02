@@ -7,20 +7,9 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.attendancemanagementapp.classes.user;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-
 public class launch_screen extends AppCompatActivity {
-    private Button get_started;
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private user user;
-    private FirebaseFirestore db;
-
     private SessionManager sessionManager;
-
+    private Button get_started;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,15 +20,14 @@ public class launch_screen extends AppCompatActivity {
         sessionManager = new SessionManager(getApplicationContext());
 
         if (sessionManager.isLoggedIn()) {
-            Intent intent = new Intent(getApplicationContext(), courses.class);
+            Intent intent = new Intent(getApplicationContext(), specialities.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
             startActivity(intent);
             finish();
         }
         get_started.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sessionManager = new SessionManager(getApplicationContext());
-
                 Intent intent = new Intent(getApplicationContext(), login.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);

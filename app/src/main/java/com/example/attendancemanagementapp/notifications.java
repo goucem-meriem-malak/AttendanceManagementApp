@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,7 +42,7 @@ public class notifications extends AppCompatActivity {
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), departments.class);
+                Intent intent = new Intent(getApplicationContext(), specialities.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -85,6 +86,16 @@ public class notifications extends AppCompatActivity {
                 imgImageView.setImageResource(R.drawable.warning);
                 imgImageView.setImageDrawable(getTintedDrawable(R.drawable.warning, R.color.yellow));
             }
+            RelativeLayout space = notificationView.findViewById(R.id.space);
+            space.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(), session.class);
+                    intent.putExtra("idCourse", currentNotification.getIdCourse());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    startActivity(intent);
+                }
+            });
             imgImageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

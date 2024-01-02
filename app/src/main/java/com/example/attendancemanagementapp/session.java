@@ -1,5 +1,9 @@
 package com.example.attendancemanagementapp;
 
+import static com.example.attendancemanagementapp.R.drawable.delete;
+
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -10,18 +14,23 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.attendancemanagementapp.classes.attendance;
 import com.example.attendancemanagementapp.classes.course;
 import com.example.attendancemanagementapp.classes.group;
 import com.example.attendancemanagementapp.classes.user;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.divider.MaterialDivider;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.zxing.BarcodeFormat;
@@ -41,6 +50,7 @@ public class session extends AppCompatActivity {
     private Button menu, notification, profile, qr_generator;
     private ImageView qr_generated;
     private TextView time, date, courseName;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private SessionManager sessionManager;
     private List<user> students;
     private LinearLayout studentContainer;
@@ -63,29 +73,44 @@ public class session extends AppCompatActivity {
         time = findViewById(R.id.time);
         date = findViewById(R.id.date);
         courseName = findViewById(R.id.course_name);
+        swipeRefreshLayout = findViewById(R.id.refresh);
 
         db = FirebaseFirestore.getInstance();
 
-        time.setText(getCurrentTime());
-        date.setText(getCurrentDate());
-
         sessionManager = new SessionManager(getApplicationContext());
+
         listOfPresence = new ArrayList<>();
+        attendance = new attendance();
+        newSession = false;
+
         idAttendance = getIntent().getStringExtra("idAttendance");
         idCourse = getIntent().getStringExtra("idCourse");
         getCourseName(idCourse);
 
-        if (getIntent().getStringExtra("idAttendance")==null){
+        if (idAttendance==null){
             newSession = true;
-            createAttendance(idCourse, null);
+            attendance = createAttendance(null);
+        } else {
+            attendance = getAttendance(idAttendance);
         }
 
-        getStudent(idCourse);
+        getTimeNDate();
 
+        getStudent(attendance);
+        if (!checkEditable(attendance.getTime())){
+            qr_generator.setBackgroundResource(delete);
+        }
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshActivity(idAttendance);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), departments.class);
+                Intent intent = new Intent(getApplicationContext(), specialities.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -109,39 +134,137 @@ public class session extends AppCompatActivity {
         qr_generator.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                generateQRCode("UuaBypoLQxn2cwfUdTUI");
+                if (checkEditable(attendance.getTime())){
+                    generateQRCode(idAttendance);
+                } else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(session.this);
+                    builder.setTitle("Confirm Deletion");
+                    builder.setMessage("Are you sure you want to delete this Session?");
+
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            db.collection("attendance").document(idAttendance).delete()
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Toast.makeText(getApplicationContext(), "Session deleted successfully", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(Exception e) {
+                                            Toast.makeText(getApplicationContext(), "Error deleting document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                            finish();
+                            List<attendance> all = sessionManager.getAttendances();
+                            all.remove(attendance);
+                            sessionManager.saveAttendances(all);
+                        }
+
+                    });
+
+
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // User clicked Cancel, do nothing
+                            dialogInterface.dismiss();
+                        }
+                    });
+
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
             }
         });
     }
 
-    private void createAttendance(String idCourse, List<String> listOfPresence) {
-        Map<String, Object> attendanceData = new HashMap<>();
+    private void getTimeNDate() {
+        Timestamp timestamp = attendance.getTime();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+
+        time.setText(timeFormat.format(timestamp.toDate()));
+        date.setText(dateFormat.format(timestamp.toDate()));
+    }
+
+    private attendance getAttendance(String idAttendance) {
         List<attendance> attendances = sessionManager.getAttendances();
 
+        for (attendance thisAttendance : attendances){
+            if (thisAttendance.getId().equals(idAttendance)){
+                attendance.setTime(thisAttendance.getTime());
+                attendance.setListOfPresence(thisAttendance.getListOfPresence());
+                break;
+            }
+        }
+        return attendance;
+    }
+
+    private void refreshActivity(String idAttendance){
+        newSession = false;
+
+        db.collection("attendance").document(idAttendance)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        studentContainer.removeAllViews();
+
+                        attendance.setListOfPresence((List<String>) task.getResult().get("listOfPresence"));
+
+                        List<attendance> newAttendances = sessionManager.getAttendances();
+                        for (attendance currentAttendance : newAttendances){
+                            if (currentAttendance.getId().equals(idAttendance)){
+                                newAttendances.remove(currentAttendance);
+                                break;
+                            }
+                        }
+                        newAttendances.add(attendance);
+                        sessionManager.saveAttendances(newAttendances);
+                        getStudent(attendance);
+                    }
+                });
+    }
+
+    private attendance createAttendance(List<String> listOfPresence) {
+        Map<String, Object> attendanceData = new HashMap<>();
+        List<attendance> attendances = sessionManager.getAttendances();
+        Map<String, Object> emptyArrayMap = new HashMap<>();
+        DocumentReference attendanceRef = db.collection("attendance").document();
+
+        idAttendance = attendanceRef.getId();
+
         attendance = new attendance();
+        attendance.setId(attendanceRef.getId());
         attendance.setIdCourse(idCourse);
         attendance.setListOfPresence(listOfPresence);
         attendance.setTime(Timestamp.now());
 
-        attendanceData.put("idCourse", idCourse);
+        attendanceData.put("idCourse", attendance.getIdCourse());
         attendanceData.put("time", attendance.getTime());
-        attendanceData.put("listOfPresence", listOfPresence);
-
-        DocumentReference attendanceRef = db.collection("attendance").document(); // Auto-generated ID
-        attendance.setId(attendanceRef.getId());
-        idAttendance = attendanceRef.getId();
+        attendanceData.put("listOfPresence", emptyArrayMap);
 
         attendances.add(attendance);
         sessionManager.saveAttendances(attendances);
-        Toast.makeText(session.this, idAttendance, Toast.LENGTH_SHORT).show();
         attendanceRef.set(attendanceData)
                 .addOnSuccessListener(aVoid -> {
                 })
                 .addOnFailureListener(e -> {
                 });
+        return attendance;
     }
-
     private void updateAddAttendance(String idStudent, String idAttendance){
+        List<String> newPresence = new ArrayList<>();
+        if (attendance.getListOfPresence()==null){
+            newPresence.add(idStudent);
+            attendance.setListOfPresence(newPresence);
+        } else {
+            newPresence = attendance.getListOfPresence();
+            newPresence.add(idStudent);
+            attendance.setListOfPresence(newPresence);
+        }
         db.collection("attendance").document(idAttendance).update("listOfPresence", FieldValue.arrayUnion(idStudent)).addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "added", Toast.LENGTH_SHORT).show();
                 })
@@ -150,6 +273,12 @@ public class session extends AppCompatActivity {
                 });
     }
     private void updateRemoveAttendance(String idStudent, String idAttendance){
+        List<String> newPresence = new ArrayList<>();
+        if (attendance.getListOfPresence()!=null){
+            newPresence = attendance.getListOfPresence();
+            newPresence.remove(idStudent);
+            attendance.setListOfPresence(newPresence);
+        }
         db.collection("attendance").document(idAttendance).update("listOfPresence", FieldValue.arrayRemove(idStudent)).addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "removed", Toast.LENGTH_SHORT).show();
                 })
@@ -157,6 +286,7 @@ public class session extends AppCompatActivity {
 
                 });
     }
+
     private void getCourseName(String idCourse) {
         List<course> courses = sessionManager.getCourses();
         for (course course : courses){
@@ -189,15 +319,14 @@ public class session extends AppCompatActivity {
 
         return  students;
     }
-
-    private void getStudent(String idCourse) {
+    private void getStudent(attendance attendance) {
         students = getStudents(idCourse);
         studentContainer = findViewById(R.id.list_students);
 
-        for (int i = 0; i < students.size(); i++) {
-            final user currentStudent= students.get(i);
+        if (students!=null&&attendance!=null) {
+            for (int i = 0; i < students.size(); i++) {
+                final user currentStudent = students.get(i);
 
-            if (students!=null) {
 
                 View attendanceView = LayoutInflater.from(this).inflate(R.layout.student, null);
 
@@ -205,9 +334,30 @@ public class session extends AppCompatActivity {
                 ImageView presentImageView = attendanceView.findViewById(R.id.stat_present);
                 ImageView absentImageView = attendanceView.findViewById(R.id.stat_absent);
 
-                nameTextView.setText(currentStudent.getLast_name()+" "+currentStudent.getFirst_name());
+                nameTextView.setText(currentStudent.getLast_name() + " " + currentStudent.getFirst_name());
                 presentImageView.setImageResource(R.drawable.right);
                 absentImageView.setImageResource(R.drawable.wrong);
+
+                if (!newSession && attendance.getListOfPresence()!=null) {
+                    if (attendance.getListOfPresence().contains(currentStudent.getUid())) {
+                        presentImageView.setColorFilter(Color.GREEN);
+                        absentImageView.setColorFilter(Color.BLACK);
+                    } else {
+                        absentImageView.setColorFilter(Color.RED);
+                        presentImageView.setColorFilter(Color.BLACK);
+                    }
+                } else {
+                    absentImageView.setColorFilter(Color.RED);
+                    presentImageView.setColorFilter(Color.BLACK);
+                }
+
+                if (!checkEditable(attendance.getTime())) {
+                    presentImageView.setEnabled(false);
+                    absentImageView.setEnabled(false);
+                } else {
+                    presentImageView.setEnabled(true);
+                    absentImageView.setEnabled(true);
+                }
 
                 studentContainer.addView(attendanceView);
 
@@ -233,14 +383,26 @@ public class session extends AppCompatActivity {
                     public void onClick(View view) {
                         absentImageView.setColorFilter(Color.RED);
                         presentImageView.setColorFilter(Color.BLACK);
-                        if (listOfPresence.contains(currentStudent.getUid())){
+                        if (listOfPresence.contains(currentStudent.getUid())) {
                             listOfPresence.remove(currentStudent.getUid());
                             updateRemoveAttendance(currentStudent.getUid(), idAttendance);
                         }
                     }
                 });
+
             }
         }
+    }
+
+    private Boolean checkEditable(Timestamp time) {
+        long currentTimeMillis = System.currentTimeMillis();
+        long timestampMillis = time.toDate().getTime();
+
+        long timeDifferenceMillis = currentTimeMillis - timestampMillis;
+
+        if ((timeDifferenceMillis >= 24 * 60 * 60 * 1000)||(timeDifferenceMillis > 1.5 * 60 * 60 * 1000)) {
+            return false;
+        } else return true;
     }
 
     private void generateQRCode(String textToEncode) {
@@ -262,6 +424,7 @@ public class session extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
     private String getCurrentTime() {
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
         Date currentTime = Calendar.getInstance().getTime();

@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +29,6 @@ public class groups extends AppCompatActivity {
     private Button menu, profile, notification;
     private TextView nameSpeciality;
     private SessionManager sessionManager;
-    private LinearLayout groupContainer;
     private List<group> groups;
 
     @Override
@@ -40,6 +40,7 @@ public class groups extends AppCompatActivity {
         notification = findViewById(R.id.notification);
         profile = findViewById(R.id.profile);
         nameSpeciality = findViewById(R.id.nameSpeciality);
+
         nameSpeciality.setText(getIntent().getStringExtra("idSpeciality"));
 
         sessionManager = new SessionManager(getApplicationContext());
@@ -49,7 +50,7 @@ public class groups extends AppCompatActivity {
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), departments.class);
+                Intent intent = new Intent(getApplicationContext(), specialities.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -74,7 +75,7 @@ public class groups extends AppCompatActivity {
 
     private void getGroups() {
         groups = sessionManager.getGroups();
-        groupContainer = findViewById(R.id.list_groups);
+        LinearLayout groupContainer = findViewById(R.id.list_groups);
 
         for (int i = 0; i < groups.size(); i++) {
             group currentGroup = groups.get(i);
@@ -84,8 +85,18 @@ public class groups extends AppCompatActivity {
 
             TextView TextView = groupView.findViewById(R.id.group_nbr);
 
-            TextView.setText("Group" + currentGroup.getGroup());
-
+            TextView.setText("Group " + currentGroup.getGroup());
+            RelativeLayout space = groupView.findViewById(R.id.space);
+            space.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(), courses.class);
+                    intent.putExtra("idGroup", currentGroup.getId());
+                    intent.putExtra("nameGroup", currentGroup.getGroup());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    startActivity(intent);
+                }
+            });
             TextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

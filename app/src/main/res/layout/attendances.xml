@@ -1,93 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
-
-    <TextView
-        android:id="@+id/nameCourse"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerInParent="true"
-        android:text="@string/course"
-        android:textSize="30sp"
-        android:textStyle="bold" />
-    <TextView
-        android:id="@+id/text_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/nameCourse"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="40dp"
-        android:text="@string/time"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/nameCourse"
-        android:layout_centerHorizontal="true"
-        android:text="@string/date"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/nameCourse"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="40dp"
-        android:text="@string/stat"/>
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/nameCourse"
-        android:layout_above="@id/footer">
-        <LinearLayout
-            android:id="@+id/list_attendances"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-        </LinearLayout>
-    </ScrollView>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/footer"
-        android:layout_alignParentEnd="true"
-        android:layout_gravity="bottom|end"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="@android:color/transparent"
-        android:src="@drawable/add" />
-
+    android:id="@+id/refresh">
     <RelativeLayout
-        android:id="@+id/footer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
-
-        <Button
-            android:id="@+id/menu"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerInParent="true"
-            android:layout_marginStart="80dp"
-            android:background="@drawable/menu" />
-        <Button
-            android:id="@+id/notification"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/notification"
-            android:layout_marginEnd="100dp"/>
-        <Button
-            android:id="@+id/profile"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:background="@drawable/user"
-            android:layout_marginEnd="80dp"/>
+        android:layout_height="match_parent">
+        <RelativeLayout
+            style="@style/header"
+            android:id="@+id/header">
+            <TextView
+            style="@style/text_title"
+            android:id="@+id/nameCourse"
+            android:text="@string/course"/>
+        </RelativeLayout>
+        <RelativeLayout
+            style="@style/body"
+            android:id="@+id/body"
+            android:layout_below="@id/header"
+            android:layout_above="@id/footer">
+            <TextView
+                style="@style/text_small"
+                android:id="@+id/time"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="40dp"
+                android:text="@string/time"/>
+            <TextView
+                style="@style/text_small"
+                android:layout_centerHorizontal="true"
+                android:text="@string/date"/>
+            <TextView
+                style="@style/text_small"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="40dp"
+                android:text="@string/stat"/>
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/time">
+                <LinearLayout
+                    style="@style/Layout_list"
+                    android:id="@+id/list_attendances">
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                style="@style/button_floating"
+                android:id="@+id/add"
+                android:backgroundTint="@android:color/holo_purple"
+                android:src="@drawable/add" />
+        </RelativeLayout>
+        <include layout="@layout/footer"/>
     </RelativeLayout>
-</RelativeLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

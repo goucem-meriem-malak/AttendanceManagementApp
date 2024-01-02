@@ -4,11 +4,15 @@ import static android.content.ContentValues.TAG;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,6 +50,7 @@ public class login extends AppCompatActivity {
     private TextView forget_password;
     private EditText email, password;
     private CheckBox remember;
+    private ProgressBar progressBar;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
@@ -74,9 +79,17 @@ public class login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
+        login = findViewById(R.id.login);
+        email = findViewById(R.id.email);
+        password = findViewById(R.id.password);
+        remember = findViewById(R.id.remember);
+        forget_password = findViewById(R.id.forget_password);
+        progressBar = findViewById(R.id.progressBar);
+
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
+        sessionManager = new SessionManager(getApplicationContext());
         user = new user();
         course = new course();
         group = new group();
@@ -85,41 +98,67 @@ public class login extends AppCompatActivity {
         faculty = new faculty();
         department = new department();
 
-        sessionManager = new SessionManager(getApplicationContext());
 
-        login = findViewById(R.id.login);
-        forget_password = findViewById(R.id.forget_password);
 
-        email = findViewById(R.id.email);
-        password = findViewById(R.id.password);
+        email.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
 
-        remember = findViewById(R.id.remember);
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                email.setError(null);
+            }
 
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        password.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                password.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!email.getText().toString().isEmpty() && !password.getText().toString().isEmpty()) {
-                    sessionManager.setLoggedIn(remember.isChecked());
+                    progressBar.setVisibility(View.VISIBLE);
+                    progressBar.setProgress(10);
                     loginUser(email.getText().toString(), password.getText().toString());
                 } else if (email.getText().toString().isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "Your E-mail is empty, please try again", Toast.LENGTH_SHORT).show();
+                    email.setError(getString(R.string.error_empty_email));
                 } else if (password.getText().toString().isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "Your password is empty, please try again", Toast.LENGTH_SHORT).show();
+                    password.setError(getString(R.string.error_empty_password));
                 }
             }
         });
         forget_password.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mAuth.sendPasswordResetEmail(email.getText().toString())
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(getApplicationContext(), "Password reset email sent.", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Failed to send password reset email.", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
+                if (!email.getText().toString().isEmpty()){
+                    mAuth.sendPasswordResetEmail(email.getText().toString())
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(getApplicationContext(), "Password reset email sent.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Failed to send password reset email.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                } else {
+                    email.setError(getString(R.string.error_empty_email));
+                }
             }
         });
     }
@@ -151,9 +190,17 @@ public class login extends AppCompatActivity {
                         getCourses(userId);
                         getNotifications(userId);
                         downloadProfilePicture(userId);
-                        Intent intent = new Intent(getApplicationContext(), courses.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                        startActivity(intent);
+                        progressBar.setProgress(100);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sessionManager.setLoggedIn(remember.isChecked());
+                                progressBar.setVisibility(View.INVISIBLE);
+                                Intent intent = new Intent(getApplicationContext(), specialities.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                                startActivity(intent);
+                            }
+                        }, 2000);
                     } else {
                         Log.e("Firestore", "Error getting courses", taskk.getException());
                     }
@@ -285,7 +332,6 @@ public class login extends AppCompatActivity {
                         }
                     }
                 });
-
     }
     private void getCourses(String userId){
         listCourse = new ArrayList<>();
@@ -395,4 +441,10 @@ public class login extends AppCompatActivity {
                     Log.e(TAG, "Error listing files in user's folder: " + exception.getMessage());
                 });
     }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
+
 }

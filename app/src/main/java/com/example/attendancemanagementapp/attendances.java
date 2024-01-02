@@ -10,10 +10,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.attendancemanagementapp.Interfaces.CircularProgressView;
 import com.example.attendancemanagementapp.classes.attendance;
@@ -31,12 +33,15 @@ import com.google.zxing.integration.android.IntentResult;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 
 public class attendances extends AppCompatActivity {
     private Button menu, notification, profile;
     private FloatingActionButton add;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar course_stat;
     private TextView nameCourse;
     private FirebaseFirestore db;
@@ -68,11 +73,18 @@ public class attendances extends AppCompatActivity {
         nameCourse.setText(getIntent().getStringExtra("nameCourse"));
         idCourse = getIntent().getStringExtra("idCourse");
         getAttendances(idCourse);
-
+        swipeRefreshLayout = findViewById(R.id.refresh);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshActivity(idCourse);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), departments.class);
+                Intent intent = new Intent(getApplicationContext(), specialities.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
             }
@@ -104,6 +116,37 @@ public class attendances extends AppCompatActivity {
         });
     }
 
+    private void refreshActivity(String idCourse) {
+        db.collection("attendance").whereEqualTo("idCourse", idCourse)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        attendances.clear();
+                        attendanceContainer.removeAllViews();
+                        for (DocumentSnapshot document : task.getResult()) {
+                            String id = document.getId();
+                            Timestamp time = document.getTimestamp("time");
+                            List<String> listOfPresence = (List<String>) document.get("listOfPresence");
+                            attendance attendance = new attendance(id, idCourse, listOfPresence, time);
+                            attendances.add(attendance);
+                        }
+
+                        List<attendance> oldAttendances = sessionManager.getAttendances();
+                        List<attendance> keep = new ArrayList<>();
+                        List<attendance> newAttendances = new ArrayList<>();
+                        for (attendance attendance : oldAttendances){
+                            if (!attendance.getIdCourse().equals(idCourse)){
+                                keep.add(attendance);
+                            }
+                        }
+                        newAttendances.addAll(attendances);
+                        newAttendances.addAll(keep);
+                        sessionManager.saveAttendances(newAttendances);
+                        getAttendances(idCourse);
+                    }
+                });
+    }
+
     private List<attendance> getAttendance(String idCourse) {
         List<attendance> attendances = sessionManager.getAttendances();
         List<attendance> listAttendances = new ArrayList<>();
@@ -126,6 +169,7 @@ public class attendances extends AppCompatActivity {
                 final attendance currentAttendance = attendances.get(i);
                 View attendanceView = LayoutInflater.from(this).inflate(R.layout.attendance, null);
 
+                RelativeLayout space = attendanceView.findViewById(R.id.space);
                 TextView timeTextView = attendanceView.findViewById(R.id.time);
                 TextView dateTextView = attendanceView.findViewById(R.id.date);
                 CircularProgressView courseStatCircularProgress = attendanceView.findViewById(R.id.attendance_stat);
@@ -140,6 +184,16 @@ public class attendances extends AppCompatActivity {
                 int progress = calculateProgress(idCourse, currentAttendance.getId());
                 courseStatCircularProgress.setProgress(progress);
 
+                space.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(getApplicationContext(), session.class);
+                        intent.putExtra("idAttendance", currentAttendance.getId());
+                        intent.putExtra("idCourse", idCourse);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        startActivity(intent);
+                    }
+                });
                 timeTextView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {

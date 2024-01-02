@@ -48,22 +48,6 @@
             android:exported="true">
         </activity>
         <activity
-            android:name=".departments"
-            android:exported="true">
-        </activity>
-        <activity
-            android:name=".degrees"
-            android:exported="true">
-        </activity>
-        <activity
-            android:name=".majors"
-            android:exported="true">
-        </activity>
-        <activity
-            android:name=".faculties"
-            android:exported="true">
-        </activity>
-        <activity
             android:name=".specialities"
             android:exported="true">
         </activity>

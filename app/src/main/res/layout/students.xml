@@ -1,105 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp">
-
-<RelativeLayout
-    android:id="@+id/header"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="40dp"
-    android:layout_centerHorizontal="true"
-    android:gravity="center_vertical">
-
-    <TextView
-        android:id="@+id/course_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:text="@string/course_name"
-        android:textSize="25sp"
-        android:textStyle="bold" />
-    <Button
-        android:id="@+id/qr_generator"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_centerInParent="true"
-        android:background="@drawable/qr_generator" />
-</RelativeLayout>
-
-    <ImageView
-        android:id="@+id/qr_generated"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
-        android:layout_below="@id/header"
-        android:layout_centerInParent="true"
-        android:visibility="gone"/>
-    <TextView
-        android:id="@+id/time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/qr_generated"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="40dp"
-        android:text="@string/time"/>
-    <TextView
-        android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/qr_generated"
-        android:layout_alignParentEnd="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginEnd="40dp"
-        android:text="@string/date"/>
-    <ScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/time">
-        <LinearLayout
-            android:id="@+id/list_students"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:orientation="vertical"
-            android:background="@drawable/style_constraint"
-            android:translationZ="3dp"
-            android:padding="12dp"
-            android:clickable="true"
-            android:focusable="true">
-        </LinearLayout>
-    </ScrollView>
+    android:id="@+id/refresh">
     <RelativeLayout
-        android:id="@+id/footer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
-
-        <Button
-            android:id="@+id/menu"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            style="@style/header"
+            android:id="@+id/header">
+            <TextView
+                style="@style/text_title"
+                android:id="@+id/course_name"
+                android:text="@string/course_name"/>
+            <Button
+                style="@style/Button_icon"
+                android:id="@+id/qr_generator"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/qr_generator"/>
+        </RelativeLayout>
+        <ImageView
+            android:id="@+id/qr_generated"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_below="@id/header"
+            android:layout_above="@+id/body"
             android:layout_centerInParent="true"
-            android:layout_marginStart="80dp"
-            android:background="@drawable/menu" />
-        <Button
-            android:id="@+id/notification"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/notification"
-            android:layout_marginEnd="100dp"/>
-        <Button
-            android:id="@+id/profile"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:background="@drawable/user"
-            android:layout_marginEnd="80dp"/>
+            android:visibility="gone"/>
+        <RelativeLayout
+            style="@style/body"
+            android:layout_above="@+id/footer"
+            android:layout_below="@id/qr_generated">
+            <TextView
+                style="@style/text_small"
+                android:id="@+id/time"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="40dp"
+                android:text="@string/time"/>
+            <TextView
+                style="@style/text_small"
+                android:id="@+id/date"
+                android:layout_alignParentEnd="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="40dp"
+                android:text="@string/date"/>
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/time">
+                <LinearLayout
+                    style="@style/Layout_list"
+                    android:id="@+id/list_students"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/style_constraint"
+                    android:translationZ="3dp"
+                    android:padding="12dp">
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </RelativeLayout>
+        <include layout="@layout/footer"/>
     </RelativeLayout>
-</RelativeLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
